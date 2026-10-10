@@ -1,0 +1,7 @@
+{
+  "id": "com.cyril.tts",
+  "name": "Text-to-Speech",
+  "version": "1.0.0",
+  "author": "Cyril",
+  "description": "Reads Twilight Princess dialogue aloud using the Windows speech engine. Speed and volume are adjustable in this panel."
+}
