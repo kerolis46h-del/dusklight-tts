@@ -23,5 +23,7 @@ add_mod(tts_mod
 )
 
 if (MSVC)
+    # Makes __cplusplus report the real C++ version (Dusklight headers rely on it).
+    target_compile_options(tts_mod PRIVATE /Zc:__cplusplus)
     target_link_libraries(tts_mod PRIVATE ole32 sapi)
 endif ()
