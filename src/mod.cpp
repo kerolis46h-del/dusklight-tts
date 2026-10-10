@@ -118,16 +118,46 @@ static void SpeechStop() {}
 #endif
 
 // ---------------------------------------------------------------------------
-// Text cleaning: keep readable characters, turn line breaks into spaces.
+// Text cleaning: remove inline formatting codes, keep readable characters.
+// The game embeds codes like ESC "CC[ffffffff]" (color) inside the text.
 // ---------------------------------------------------------------------------
+static bool IsEscCode(unsigned char a, unsigned char b) {
+    static const char* const kCodes[] = {"CU", "CD", "CL", "CR", "LU", "LD", "ST", "CC",
+                                         "GC", "FX", "FY", "SH", "SV", "GM", "HM"};
+    for (const char* code : kCodes) {
+        if (code[0] == static_cast<char>(a) && code[1] == static_cast<char>(b)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static std::string CleanText(const char* raw) {
     std::string out;
     if (raw == nullptr) {
         return out;
     }
     bool lastSpace = true;
-    for (const unsigned char* p = reinterpret_cast<const unsigned char*>(raw); *p != 0; ++p) {
+    const unsigned char* p = reinterpret_cast<const unsigned char*>(raw);
+    while (*p != 0) {
         unsigned char c = *p;
+
+        if (c == 0x1B) {  // start of a formatting code
+            ++p;
+            if (p[0] != 0 && p[1] != 0 && IsEscCode(p[0], p[1])) {
+                p += 2;
+                if (*p == '[') {  // optional argument in brackets
+                    while (*p != 0 && *p != ']') {
+                        ++p;
+                    }
+                    if (*p == ']') {
+                        ++p;
+                    }
+                }
+            }
+            continue;
+        }
+
         if (c == '\n' || c == '\r' || c == ' ') {
             if (!lastSpace) {
                 out += ' ';
@@ -138,6 +168,7 @@ static std::string CleanText(const char* raw) {
             lastSpace = false;
         }
         // other control bytes are skipped
+        ++p;
     }
     while (!out.empty() && out.back() == ' ') {
         out.pop_back();
