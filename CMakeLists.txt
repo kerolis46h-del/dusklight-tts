@@ -17,3 +17,4 @@ add_mod(tts_mod
 if (WIN32 AND MSVC)
     target_link_libraries(tts_mod PRIVATE ole32 sapi)
 endif ()
+
